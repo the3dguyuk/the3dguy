@@ -60,10 +60,10 @@
 					<h2 id="line2">From Storyboard to Completion</h2>
 						</div>
 					<div class="wow fadeIn">
-					<h2 id="line3">Legendary Fluids And Particles 3D Designer, Technical Director</h2>
+					<h2 id="line3">Fluids And Particles 3D Designer, Technical Director</h2>
 						</div>
 			<div class="wow fadeIn">
-						<h2>Blender3D, 3DsMax, Maya, AFX, Nuke</h2>
+						<h2>Blender3D, 3DsMax, Maya,Houdini, AFX, Nuke</h2>
 					</div>
 					<div class="wow fadeIn">
 						<h2>3D, Motion Graphics, Compositing, and Post-Production.</h2>
@@ -1098,7 +1098,7 @@
 
 <footer>
 	<div class="footer-bar">
-		<span class="pull-left">© 2026 the3dguy.co.uk - All rights reserved.</span>
+		<span class="pull-left">© 2028 the3dguy.co - All rights reserved.</span>
 	</div>
 </footer>
 
@@ -1135,395 +1135,38 @@
 	}
 </script>
 	
-	
-<script>
+	<script>
+
+// Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, starting video lazy load');
-    
-    // 1. Randomize videos
+    // Find the video grid container
     const videoGrid = document.querySelector('.video-grid');
-    if (!videoGrid) {
-        console.error('No .video-grid found!');
-        return;
-    }
     
-    const videos = Array.from(videoGrid.querySelectorAll('.video-container'));
-    console.log('Found', videos.length, 'videos');
-    
-    // Shuffle videos
-    for (let i = videos.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [videos[i], videos[j]] = [videos[j], videos[i]];
-    }
-    
-    // Reorder videos
-    videos.forEach(video => videoGrid.appendChild(video));
-    console.log('Videos randomized');
-    
-    // 2. Prepare videos for lazy loading
-    prepareVideos(videos);
-    
-    // 3. Wait 2 seconds, then start lazy loading
-    setTimeout(initLazyLoading, 2000);
-});
-
-// Track active loading videos
-const activeLoads = new Map(); // Map of container/videoSrc to their state
-const MAX_CONCURRENT_LOADS = 10;
-const waitingQueue = [];
-
-function prepareVideos(videos) {
-    videos.forEach(container => {
-        const video = container.querySelector('.video-item');
-        const source = video.querySelector('source');
+    if (videoGrid) {
+        // Get all video containers
+        const videoContainers = Array.from(videoGrid.children);
         
-        if (!video || !source) return;
+        // Shuffle the array using Fisher-Yates algorithm
+        for (let i = videoContainers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [videoContainers[i], videoContainers[j]] = [videoContainers[j], videoContainers[i]];
+        }
         
-        // Store source in data attribute
-        const videoSrc = source.src;
-        container.setAttribute('data-video-src', videoSrc);
+        // Clear the grid
+        videoGrid.innerHTML = '';
         
-        // Remove source to prevent auto-loading
-        source.remove();
-        
-        // Add loader
-        const loader = document.createElement('div');
-        loader.className = 'video-loader';
-        
-        // Random countdown 5-25 seconds
-        const countdownTime = Math.floor(Math.random() * 10) + 1;
-        container.setAttribute('data-countdown', countdownTime);
-        container.setAttribute('data-remaining', countdownTime); // Store remaining time
-        
-        loader.innerHTML = `Starting in: <span class="countdown">${countdownTime}s</span>`;
-        loader.style.cssText = `
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            z-index: 10;
-            opacity: 1;
-            transition: opacity 0.3s;
-        `;
-        
-        container.appendChild(loader);
-        video.style.opacity = '0';
-        video.style.transition = 'opacity 0.5s';
-    });
-}
-
-function initLazyLoading() {
-    console.log('Starting lazy loading');
-    
-    const videoContainers = document.querySelectorAll('.video-container[data-video-src]');
-    console.log('Found', videoContainers.length, 'containers with video data');
-    
-    if (videoContainers.length === 0) return;
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const container = entry.target;
-                startCountdown(container);
-                observer.unobserve(container);
-            }
+        // Append the shuffled containers back
+        videoContainers.forEach(container => {
+            videoGrid.appendChild(container);
         });
-    }, {
-        root: null,
-        rootMargin: '100px',
-        threshold: 0.1
-    });
-    
-    videoContainers.forEach(container => {
-        observer.observe(container);
-    });
-}
-
-function startCountdown(container) {
-    const loader = container.querySelector('.video-loader');
-    const countdownEl = loader.querySelector('.countdown');
-    let countdownTime = parseInt(container.getAttribute('data-countdown'));
-    let remaining = parseInt(container.getAttribute('data-remaining')) || countdownTime;
-    const videoSrc = container.getAttribute('data-video-src');
-    
-    if (!loader || !countdownEl) return;
-    
-    console.log('Starting countdown for:', videoSrc, `(Active: ${activeLoads.size}/${MAX_CONCURRENT_LOADS})`);
-    
-    // Check if we should pause the countdown
-    if (activeLoads.size >= MAX_CONCURRENT_LOADS) {
-        console.log(`At capacity (${MAX_CONCURRENT_LOADS}), pausing countdown for:`, videoSrc);
-        updateLoaderStatus(loader, `Paused (${activeLoads.size}/${MAX_CONCURRENT_LOADS} active)`);
-        
-        // Store remaining time
-        container.setAttribute('data-remaining', remaining);
-        
-        // Add to waiting queue if not already there
-        if (!waitingQueue.some(item => item.container === container)) {
-            waitingQueue.push({
-                container: container,
-                action: 'startCountdown',
-                remaining: remaining
-            });
-        }
-        return;
     }
-    
-    // Start or resume countdown
-    let interval = null;
-    
-    const startCountdownInterval = () => {
-        // Update display with remaining time
-        countdownEl.textContent = remaining + 's';
-        
-        // Color coding
-        updateCountdownColor(countdownEl, remaining);
-        
-        interval = setInterval(() => {
-            remaining--;
-            container.setAttribute('data-remaining', remaining);
-            countdownEl.textContent = remaining + 's';
-            
-            // Update color
-            updateCountdownColor(countdownEl, remaining);
-            
-            if (remaining <= 0) {
-                clearInterval(interval);
-                activeLoads.delete(container); // Remove from active loads when countdown finishes
-                loader.innerHTML = 'Loading: <span class="percentage">0%</span>';
-                setTimeout(() => tryLoadVideo(container), 100);
-            }
-        }, 1000);
-    };
-    
-    // Track this countdown as active
-    activeLoads.set(container, {
-        type: 'countdown',
-        videoSrc: videoSrc,
-        interval: interval,
-        remaining: remaining
-    });
-    
-    // Start the countdown
-    startCountdownInterval();
-    
-    // Update the interval reference in activeLoads
-    const activeLoad = activeLoads.get(container);
-    activeLoad.interval = interval;
-    activeLoads.set(container, activeLoad);
-}
-
-function updateCountdownColor(element, remaining) {
-    if (remaining <= 3) {
-        element.style.color = '#ff4444';
-    } else if (remaining <= 10) {
-        element.style.color = '#ffaa00';
-    } else {
-        element.style.color = '#4CAF50';
-    }
-}
-
-function tryLoadVideo(container) {
-    const videoSrc = container.getAttribute('data-video-src');
-    const loader = container.querySelector('.video-loader');
-    
-    console.log(`Attempting to load: ${videoSrc} (Active: ${activeLoads.size}/${MAX_CONCURRENT_LOADS})`);
-    
-    // Check if we can start loading
-    if (activeLoads.size >= MAX_CONCURRENT_LOADS) {
-        console.log(`At capacity (${MAX_CONCURRENT_LOADS}), queuing load for:`, videoSrc);
-        updateLoaderStatus(loader, `Queued (${activeLoads.size}/${MAX_CONCURRENT_LOADS} active)`);
-        
-        // Add to waiting queue if not already there
-        if (!waitingQueue.some(item => item.container === container)) {
-            waitingQueue.push({
-                container: container,
-                action: 'loadVideo'
-            });
-        }
-        return false;
-    }
-    
-    // If under capacity, load the video
-    loadVideo(container);
-    return true;
-}
-
-function loadVideo(container) {
-    const videoSrc = container.getAttribute('data-video-src');
-    const video = container.querySelector('.video-item');
-    const loader = container.querySelector('.video-loader');
-    
-    if (!video || !videoSrc) return;
-    
-    console.log('Loading video:', videoSrc, `(Active: ${activeLoads.size + 1}/${MAX_CONCURRENT_LOADS})`);
-    
-    // Add to active loads
-    activeLoads.set(container, {
-        type: 'loading',
-        videoSrc: videoSrc,
-        loader: loader,
-        video: video
-    });
-    
-    // Add source back
-    const source = document.createElement('source');
-    source.src = videoSrc;
-    source.type = 'video/mp4';
-    video.appendChild(source);
-    
-    // Set attributes
-    video.setAttribute('autoplay', '');
-    video.setAttribute('loop', '');
-    video.setAttribute('muted', '');
-    
-    const percentageEl = loader.querySelector('.percentage');
-    
-    // Track progress
-    const progressHandler = () => {
-        if (video.duration > 0 && video.buffered.length > 0) {
-            const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-            const percent = Math.min(100, Math.round((bufferedEnd / video.duration) * 100));
-            
-            if (percentageEl) {
-                percentageEl.textContent = percent + '%';
-                
-                if (percent < 30) {
-                    percentageEl.style.color = '#ff4444';
-                } else if (percent < 70) {
-                    percentageEl.style.color = '#ffaa00';
-                } else {
-                    percentageEl.style.color = '#4CAF50';
-                }
-            }
-        }
-    };
-    
-    video.addEventListener('progress', progressHandler);
-    
-    // When ready
-    const canplayHandler = () => {
-        console.log('Video ready:', videoSrc);
-        
-        if (percentageEl) {
-            percentageEl.textContent = '100%';
-            percentageEl.style.color = '#4CAF50';
-        }
-        
-        video.play()
-            .then(() => {
-                video.style.opacity = '1';
-                setTimeout(() => {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 300);
-                }, 500);
-            })
-            .catch(error => {
-                console.log('Autoplay blocked:', videoSrc);
-                if (percentageEl) {
-                    percentageEl.textContent = 'Click to play';
-                }
-                container.style.cursor = 'pointer';
-                const clickHandler = () => {
-                    video.play();
-                    video.style.opacity = '1';
-                    loader.remove();
-                };
-                container.addEventListener('click', clickHandler, { once: true });
-                
-                // Still show video
-                video.style.opacity = '1';
-            });
-        
-        // Video is fully loaded, remove from active loads
-        videoComplete(container);
-    };
-    
-    video.addEventListener('canplay', canplayHandler, { once: true });
-    
-    // Handle errors
-    const errorHandler = () => {
-        console.error('Error loading:', videoSrc);
-        if (percentageEl) {
-            percentageEl.textContent = 'Error';
-            percentageEl.style.color = '#ff4444';
-        }
-        
-        // Remove from active loads on error too
-        videoComplete(container);
-    };
-    
-    video.addEventListener('error', errorHandler, { once: true });
-    
-    // Start loading
-    video.load();
-}
-
-function videoComplete(container) {
-    // Clear any interval if it's a countdown
-    const activeLoad = activeLoads.get(container);
-    if (activeLoad && activeLoad.interval) {
-        clearInterval(activeLoad.interval);
-    }
-    
-    // Remove from active loads
-    activeLoads.delete(container);
-    
-    console.log(`Video completed. Active: ${activeLoads.size}/${MAX_CONCURRENT_LOADS}, Waiting: ${waitingQueue.length}`);
-    
-    // Process waiting queue
-    processWaitingQueue();
-}
-
-function processWaitingQueue() {
-    console.log(`Processing queue. Active: ${activeLoads.size}/${MAX_CONCURRENT_LOADS}, Waiting: ${waitingQueue.length}`);
-    
-    // Process as many items from queue as possible
-    while (waitingQueue.length > 0 && activeLoads.size < MAX_CONCURRENT_LOADS) {
-        const nextItem = waitingQueue.shift();
-        const container = nextItem.container;
-        const videoSrc = container.getAttribute('data-video-src');
-        const loader = container.querySelector('.video-loader');
-        
-        console.log(`Processing queued ${nextItem.action} for:`, videoSrc);
-        
-        if (nextItem.action === 'startCountdown') {
-            // Resume countdown with remaining time
-            const remaining = nextItem.remaining || parseInt(container.getAttribute('data-remaining')) || 
-                             parseInt(container.getAttribute('data-countdown'));
-            
-            // Update loader to show countdown again
-            const countdownEl = loader.querySelector('.countdown');
-            if (countdownEl) {
-                countdownEl.textContent = remaining + 's';
-                updateCountdownColor(countdownEl, remaining);
-            } else {
-                // Recreate countdown element if needed
-                loader.innerHTML = `Starting in: <span class="countdown">${remaining}s</span>`;
-            }
-            
-            // Restart countdown
-            startCountdown(container);
-        } else if (nextItem.action === 'loadVideo') {
-            // Start loading video
-            loader.innerHTML = 'Loading: <span class="percentage">0%</span>';
-            setTimeout(() => loadVideo(container), 100);
-        }
-    }
-}
-
-function updateLoaderStatus(loader, status) {
-    if (loader) {
-        loader.innerHTML = `<span class="queue-status" style="color: #ffaa00; font-size: 12px;">${status}</span>`;
-    }
-}
-</script>	
+});	
+	
+	
+	</script>
+	
+	
+	
 	
 	
 <script>
